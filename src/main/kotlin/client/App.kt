@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import models.Alumno
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.io.ObjectInputStream
 import java.net.InetAddress
 import java.net.Socket
 
@@ -15,7 +16,7 @@ fun main() {
     val direccion: InetAddress
     val server: Socket
     val puerto = 8081
-    val listaAlumnos = mutableListOf<Alumno>()
+    var listaAlumnos = mutableListOf<Alumno>()
     val alumno = Alumno()
     //val alumno: Alumno = Alumno(nombre = "1", notas = a , clase = "Clase 1")
 
@@ -30,10 +31,10 @@ fun main() {
             val data = DataOutputStream(server.getOutputStream())
             var input: Int
             do {
-                println("1.Añadir alumno: \n2.Actualizar alumno: \n3.Borrar alumno ")
+                println("1.Añadir alumno: \n2.Actualizar alumno: \n3.Borrar alumno: ")
                 input = readln().toInt()
             }while (input < 1 || input > 3)
-
+            data.writeUTF(input.toString())
             when (input) {
                 1 -> {
                     println("Introduzca las notas del alumno (número de examen: , nota: )")
@@ -46,7 +47,15 @@ fun main() {
                     println("Nuevo alumno introducido...")
                 }
                 2 -> {
-                    listaAlumnos.add(json.decodeFromString(content.readUTF()))
+                    /*while(content.available() > 0) {
+                        listaAlumnos.add(json.decodeFromString(content.readUTF()))
+                    }*/
+                    val result = ObjectInputStream(server.getInputStream()).readObject()
+                    listaAlumnos = json.decodeFromString(result.toString())
+                    println("Recibidos todos los alumnos")
+                    for(i in 0 until listaAlumnos.size){
+                        println(listaAlumnos[i].nombre)
+                    }
                     var acAlumno: String
                     var contiene= false
                     do{
